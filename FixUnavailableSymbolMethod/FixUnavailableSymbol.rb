@@ -18,7 +18,7 @@ class FixUnavailableSymbol
   end
 
 
-  def fixMethod()
+  def fixMethod(unavailableSymbolType)
 
 
     fileDirectory = Dir.getwd + "/" + @filePath
@@ -29,7 +29,11 @@ class FixUnavailableSymbol
     puts "declared = "+ @declaredMethod
     #substituir o metodo que mudou o nome para o que foi declarado
     array = baseFileContent.split("\n")
-    array[@line - 1].gsub!(@missingMethod, @declaredMethod)
+    if unavailableSymbolType == "unavailableSymbolMethod"
+      array[@line - 1].gsub!(@missingMethod, @declaredMethod)
+    elsif  unavailableSymbolType == "unavailableSymbolVariable"
+      array[@line - 1].gsub!(array[@line - 1][/[^a-zA-Z]#{@missingMethod}[^a-zA-Z]/], @declaredMethod+array[@line - 1][/[^a-zA-Z]#{@missingMethod}[^a-zA-Z]/].split(@missingMethod).last)
+    end
     baseFileContent = array.join("\n")
     #escrever no arquivo
     e = File.open(fileDirectory, 'w')

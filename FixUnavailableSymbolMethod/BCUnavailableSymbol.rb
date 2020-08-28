@@ -79,7 +79,7 @@ class BCUnavailableSymbol
 			sleep(10)
 			puts "Started Gumtree Process #{processNumber}"
 			thr = Thread.new { diff = system "bash", "-c", "exec -a gumtree ./gumtree webdiff #{firstBranch.gsub("\n","")} #{secondBranch.gsub("\n","")}" }
-			sleep(15)
+			sleep(45)
 			mainDiff = %x(wget http://127.0.0.1:4567/ -q -O -)
 			modifiedFilesDiff = getDiffByModification(mainDiff[/Modified files <span class="badge">(.*?)<\/span>/m, 1])
 			addedFiles = getDiffByAddedFile(mainDiff[/Added files <span class="badge">(.*?)<\/span>/m, 1])
