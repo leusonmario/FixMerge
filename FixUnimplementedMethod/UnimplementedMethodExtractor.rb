@@ -43,8 +43,7 @@ class UnimplementedMethodExtractor
     while(count < interfaceFiles.size)
       classFile = ""
       methodInterface = ""
-      #TODO:- FALTA FAZER ISSO
-      # aqui tb
+
       filePath = ""
       if (buildLog.match(/\[ERROR\] [0-9a-zA-Z\/\-]*\.java/).to_s.match(/[a-zA-Z]+\.java/)[0].to_s)
 
