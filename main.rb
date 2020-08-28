@@ -9,7 +9,7 @@ require_relative 'FixUnimplementedMethod/FixUnimplementedMethod'
 require_relative 'FixUnimplementedMethod/UnimplementedMethodExtractor'
 require_relative 'GitProject.rb'
 
-if ARGV.length < 1
+if ARGV.length < 0
   puts "invalid args, valid args example: "
   puts "grumTreePath projectPath"
   puts "projectPath is an optional param"
@@ -17,15 +17,18 @@ if ARGV.length < 1
 end
 
 
-# Pre setup
-puts "Entry your password"
-password = STDIN.noecho(&:gets)
-
-gumTree = ARGV[0]
-
-if ARGV.length > 1
-  Dir.chdir(ARGV[1])
+parameters = []
+File.open("properties", "r") do |text|
+  indexLine = 0
+  text.each_line do |line|
+    parameters[indexLine] = line[/\<(.*?)\>/, 1]
+    indexLine += 1
+  end
 end
+
+gumTree = parameters[2]
+
+Dir.chdir(parameters[3])
 projectPath = Dir.getwd
 
 repLog = `#{"git config --get remote.origin.url"}`
@@ -40,9 +43,9 @@ commitHash = `#{"git rev-parse --verify HEAD"}`
 commitHash = commitHash.gsub("\n", "")
 print "\n"
 # Init  Analysis
-gitProject = GitProject.new(projectName, projectPath, "samuelbrasileiro", "00780708")
+gitProject = GitProject.new(projectName, projectPath, parameters[0], parameters[1])
 conflictResult = gitProject.conflictScenario(commitHash) #aqui vamos pegar o parentMerge
-#ESTRUTURA CR: [bool, [commits]]
+
 gitProject.deleteProject()
 
 conflictParents = conflictResult[1]
@@ -97,7 +100,7 @@ end
 
 unavailableSymbolMethodExtractor = UnavailableSymbolExtractor.new()
 unavailableResult = unavailableSymbolMethodExtractor.extractionFilesInfo(travisLog)
-if unavailableResult != nil && unavailableResult[0] == "unavailableSymbolMethod"
+if unavailableResult != nil && (unavailableResult[0] == "unavailableSymbolMethod" or unavailableResult[0] == "unavailableSymbolVariable")
   conflictCauses = unavailableResult[1]
   ocurrences = unavailableResult[2]
   puts "cause = #{unavailableResult[0]}"
@@ -120,7 +123,6 @@ if unavailableResult != nil && unavailableResult[0] == "unavailableSymbolMethod"
       puts "A build Conflict was detect, the conflict type is " + unavailableResult[0] + "."
       puts "Do you want fix it? Y or n"
       resp = STDIN.gets()
-      # resp = "n"
 
       puts ">>>>>>>>>>>>>>>class"
       puts className
@@ -130,7 +132,7 @@ if unavailableResult != nil && unavailableResult[0] == "unavailableSymbolMethod"
       puts substituter
       if resp != "n" && resp != "N"
         fixer = FixUnavailableSymbol.new(projectName, projectPath, baseCommit, fileToChange, cause, conflictLine, substituter)
-        fixer.fixMethod
+        fixer.fixMethod(unavailableResult[0])
       end
     end
   end
@@ -155,7 +157,6 @@ if unavailableResult[0] == "unimplementedMethod"
   puts "A build Conflict was detect, the conflict type is " + unavailableResult[0] + "."
   puts "Do you want fix it? Y or n"
   resp = STDIN.gets()
-  # resp = "n"
 
   puts ">>>>>>>>>>>>>>>Interface to change"
   puts interfacePath
@@ -165,7 +166,6 @@ if unavailableResult[0] == "unimplementedMethod"
   puts methodNameByTravis
   puts ">>>>>>>>>>>>>>>Class"
   puts className
-  %x()
   if !resp.match(/(n|N)/)
     fixer = FixUnimplementedMethod.new( projectPath, interfacePath, methodNameByTravis)
     fixer.fix(interfaceName)
